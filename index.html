@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Design Case — Solo Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f0e8;
+  --card: #ffffff;
+  --border: #1a1a1a;
+  --border-light: #ccc5b8;
+  --text: #1a1a1a;
+  --text-muted: #666;
+  --mono: 'IBM Plex Mono', monospace;
+  --blue: #2563EB;
+  --blue-light: #dbeafe;
+  --green: #16a34a;
+  --green-light: #dcfce7;
+  --red: #dc2626;
+  --amber: #d97706;
+  --shadow: 3px 3px 0 #ccc5b8;
+}
+body {
+  background: linear-gradient(160deg, #f5f0e8 0%, #eee8da 100%);
+  color: var(--text); font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh; line-height: 1.5;
+}
+.hidden { display: none !important; }
+.container { max-width: 760px; margin: 0 auto; padding: 24px; }
+em { font-style: italic; }
+strong { font-weight: 700; }
+
+h1, h2, h3, h4 { font-weight: 700; line-height: 1.25; }
+h1 { font-size: 1.8rem; letter-spacing: -0.01em; }
+h2 { font-size: 1.1rem; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
+h3 {
+  font-size: 0.85rem; margin-bottom: 12px; letter-spacing: 0.04em;
+  display: inline; background: linear-gradient(transparent 55%, #fde68a 55%); padding: 0 4px;
+}
+p { margin-bottom: 8px; }
+
+.card {
+  border: 2px solid #444; border-radius: 14px; padding: 22px;
+  margin-bottom: 16px; background: var(--card);
+  box-shadow: var(--shadow);
+}
+.card-tight { padding: 16px 18px; }
+.card label { display: block; font-weight: 600; font-size: 0.92rem; margin-bottom: 12px; }
+.overline {
+  font-family: var(--mono); font-size: 0.66rem;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); margin-bottom: 8px;
+}
+
+button, .btn {
+  background: transparent; border: 2px solid #555;
+  padding: 10px 28px; font-family: 'Inter', system-ui, sans-serif;
+  letter-spacing: 0.04em; cursor: pointer;
+  font-size: 0.85rem; font-weight: 600; color: var(--text);
+  border-radius: 10px; transition: all 0.15s;
+  box-shadow: 2px 2px 0 var(--border-light);
+}
+button:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--border-light); }
+button:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--border-light); }
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+button.primary {
+  background: var(--blue); color: #fff; border: 2.5px solid var(--border);
+  box-shadow: 3px 3px 0 var(--border);
+}
+button.primary:hover:not(:disabled) { background: #1d4ed8; color: #fff; box-shadow: 5px 5px 0 var(--border); }
+button.primary:active:not(:disabled) { box-shadow: 1px 1px 0 var(--border); }
+button.ghost { background: transparent; border: 2px dashed var(--border-light); }
+
+textarea, input[type="text"], input[type="email"], select {
+  width: 100%; padding: 12px 14px; border: 2px solid #d0ccc4; border-radius: 10px;
+  font-family: 'Inter', system-ui, sans-serif; font-size: 0.92rem;
+  outline: none; transition: border-color 0.15s; line-height: 1.55; background: #fff;
+}
+textarea { min-height: 80px; resize: vertical; }
+textarea:focus, input:focus, select:focus { border-color: var(--blue); }
+input[type="range"] { width: 100%; accent-color: var(--blue); margin: 4px 0; }
+
+/* ===== Intro ===== */
+.intro-inner {
+  background: #fff; border-radius: 16px; padding: 56px 48px 48px;
+  border: 2.5px solid #444; box-shadow: 4px 4px 0 var(--border-light);
+  max-width: 520px; margin: 0 auto; text-align: center;
+  transform: rotate(-0.6deg);
+}
+.intro-the { font-size: 1rem; color: #888; font-weight: 400; margin-bottom: 4px; letter-spacing: 0.08em; }
+.intro-title {
+  font-size: clamp(36px, 7vw, 52px); font-weight: 800; color: var(--text);
+  line-height: 1.05; letter-spacing: -0.02em;
+}
+.intro-title-highlight { background: linear-gradient(transparent 50%, #fde68a 50%); padding: 0 6px; }
+.intro-rule { height: 3px; border-radius: 2px; background: var(--blue); width: 60px; margin: 20px auto 18px; }
+.intro-subtitle { font-size: 0.92rem; color: var(--text-muted); font-weight: 500; margin-bottom: 32px; letter-spacing: 0.02em; line-height: 1.55; }
+.intro-badge {
+  display: inline-block; background: #fde68a; border: 1.5px solid #d4a800; border-radius: 20px;
+  padding: 4px 14px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 24px; color: #7c6600;
+}
+
+/* ===== Registration (matches d.MBA solo-game pattern) ===== */
+.register-inner {
+  background: #fff; padding: 36px 32px; border-radius: 16px;
+  border: 2px solid #444; box-shadow: var(--shadow);
+  max-width: 540px; margin: 0 auto;
+}
+.register-inner h1 {
+  font-size: 1.35rem; font-weight: 800; text-align: center;
+  display: inline-block;
+  background: linear-gradient(transparent 55%, #fde68a 55%); padding: 0 4px;
+}
+.register-inner .reg-header { text-align: center; margin-bottom: 8px; }
+.reg-subtitle { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 28px; text-align: center; }
+.reg-section-title {
+  font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.06em; color: var(--blue); margin-bottom: 12px;
+}
+.checklist { list-style: none; padding: 0; margin: 0; }
+.checklist li {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px; margin-bottom: 8px;
+  border: 2px solid #e0dcd4; border-radius: 10px; background: #fff;
+  cursor: pointer; transition: all 0.15s; user-select: none;
+}
+.checklist li:hover { background: #faf6ef; border-color: #aaa; }
+.checklist li.checked { border-color: var(--blue); background: #eff6ff; }
+.check-box {
+  width: 22px; height: 22px; border: 2px solid #888; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+  font-size: 0.82rem; color: transparent;
+}
+.checklist li.checked .check-box {
+  background: var(--blue); border-color: var(--blue); color: #fff;
+}
+.check-text { font-size: 0.88rem; line-height: 1.5; color: var(--text); }
+.check-text small { display: block; font-size: 0.78rem; color: #888; margin-top: 2px; }
+.form-error {
+  color: #d00; font-size: 0.84rem; margin: 10px 0;
+  display: none; text-align: center;
+}
+.err { color: var(--red); font-size: 0.82rem; margin-top: 8px; display: none; }
+
+/* ===== Briefing components ===== */
+.scene-text { white-space: pre-line; font-size: 0.95rem; line-height: 1.7; color: var(--text); }
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px; margin-top: 14px;
+}
+.metric-item {
+  background: #f9f6f0; border: 1px solid var(--border-light); border-radius: 8px; padding: 12px 14px;
+}
+.metric-label {
+  font-family: var(--mono); font-size: 0.62rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 4px;
+}
+.metric-value {
+  font-family: var(--mono); font-size: 1rem; font-weight: 600; color: var(--text);
+}
+.metric-explanation {
+  font-size: 0.74rem; line-height: 1.45; color: var(--text-muted); margin-top: 6px;
+}
+.metric-explanation strong { color: var(--text); }
+
+/* Step 5 in detail */
+.step5-tasks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; counter-reset: s5; }
+.step5-tasks li {
+  display: flex; align-items: start; gap: 10px;
+  padding: 8px 10px; background: #fafaf6;
+  border-radius: 6px; font-size: 0.9rem; line-height: 1.4;
+}
+.step5-tasks li::before {
+  content: counter(s5); counter-increment: s5;
+  font-family: var(--mono); font-size: 0.7rem; font-weight: 700;
+  background: var(--amber); color: white;
+  border-radius: 50%; width: 18px; height: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 2px;
+}
+
+/* Customer quotes */
+.quote-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.quote-list li {
+  padding: 12px 14px; background: #fafaf6;
+  border-left: 3px solid #6366f1; border-radius: 4px;
+}
+.quote-text {
+  font-size: 0.92rem; line-height: 1.55;
+  font-style: italic; color: var(--text); margin: 0 0 6px;
+}
+.quote-attrib {
+  font-family: var(--mono); font-size: 0.7rem;
+  color: var(--text-muted); letter-spacing: 0.04em;
+}
+
+/* Funnel chart */
+.funnel-chart { display: flex; flex-direction: column; gap: 4px; }
+.funnel-row {
+  display: grid; grid-template-columns: 60px 1fr 70px;
+  align-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 0.78rem;
+}
+.funnel-row .funnel-label { color: var(--text-muted); }
+.funnel-bar-wrap {
+  background: #f0ebe0; border-radius: 3px;
+  height: 22px; overflow: hidden;
+}
+.funnel-bar { height: 100%; background: #6366f1; transition: width 0.4s ease; }
+.funnel-row.cliff .funnel-bar { background: var(--red); }
+.funnel-row.cliff .funnel-label { color: var(--red); font-weight: 700; }
+.funnel-row .funnel-pct { text-align: right; font-weight: 600; color: var(--text); }
+.funnel-row.cliff .funnel-pct { color: var(--red); }
+
+/* Stakeholders */
+.stakeholder-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.stakeholder-list li {
+  display: grid; grid-template-columns: 160px 1fr;
+  gap: 12px; align-items: start;
+  padding: 10px 12px; background: #fafaf6;
+  border-left: 3px solid var(--border-light); border-radius: 4px;
+  font-size: 0.88rem; line-height: 1.5;
+}
+.stakeholder-role { font-weight: 700; color: var(--text); }
+.stakeholder-role .stakeholder-want {
+  display: block; font-weight: 400; font-size: 0.78rem;
+  color: var(--text-muted); margin-top: 2px;
+}
+.stakeholder-quote { font-style: italic; color: var(--text); }
+@media (max-width: 560px) { .stakeholder-list li { grid-template-columns: 1fr; gap: 4px; } }
+
+/* ===== Lever picker ===== */
+.lever-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+.lever-card {
+  background: #fff; border: 2px solid var(--border-light); border-radius: 10px;
+  padding: 14px; cursor: pointer; transition: all 0.15s;
+  font-size: 0.9rem; line-height: 1.45; text-align: left;
+}
+.lever-card:hover { border-color: var(--blue); }
+.lever-card.selected {
+  border-color: var(--blue); background: var(--blue-light);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+.lever-card .lever-label { font-weight: 700; font-size: 0.98rem; }
+.lever-card .lever-branch {
+  font-family: var(--mono); font-size: 0.66rem;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted); margin-top: 2px;
+}
+.lever-explanation {
+  margin-top: 16px; padding: 14px;
+  border-radius: 8px; background: #fafaf6;
+  display: none;
+}
+.lever-explanation.visible { display: block; }
+.lever-case {
+  margin-top: 10px; padding: 10px 12px;
+  background: #fff7e0; border-left: 3px solid var(--amber);
+  border-radius: 4px; font-size: 0.85rem; line-height: 1.55;
+}
+.lever-backed {
+  margin-top: 10px; padding: 10px 12px;
+  background: #eef2ff; border-left: 3px solid #6366f1;
+  border-radius: 4px; font-size: 0.85rem; line-height: 1.55;
+}
+.lever-backed strong { font-family: var(--mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #3730a3; display: block; margin-bottom: 4px; font-style: normal; }
+.lever-backed em { font-style: italic; }
+
+/* ===== Estimation ===== */
+.baseline-row {
+  display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1.1fr;
+  gap: 8px; align-items: stretch; margin-top: 8px;
+}
+.baseline-cell {
+  background: #f0ebe0; border: 1px solid var(--border-light);
+  border-radius: 8px; padding: 10px 8px; text-align: center;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.baseline-cell.total { background: var(--green-light); border: 2px solid var(--green); }
+.baseline-cell .bcl { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.baseline-cell .bcv { font-family: var(--mono); font-size: 1.05rem; font-weight: 700; color: var(--text); }
+.baseline-cell.total .bcv { color: var(--green); }
+.baseline-cell .bcs { font-size: 0.66rem; color: var(--text-muted); margin-top: 4px; font-family: var(--mono); }
+.baseline-op { font-family: var(--mono); font-size: 1.1rem; font-weight: 600; color: var(--text-muted); align-self: center; }
+@media (max-width: 640px) { .baseline-row { grid-template-columns: 1fr; } .baseline-op { text-align: center; } }
+
+.fermi-chain { display: flex; flex-direction: column; gap: 12px; }
+.fermi-step {
+  background: #fff; border: 1px solid var(--border-light);
+  border-left: 3px solid transparent; border-radius: 8px;
+  padding: 12px 14px; transition: border-left-color 0.2s, background 0.2s;
+}
+.fermi-step.tone-high { border-left-color: var(--amber); }
+.fermi-step.tone-bold { border-left-color: var(--red); background: #fef2f2; }
+.fermi-prompt { font-size: 0.92rem; font-weight: 600; margin-bottom: 4px; }
+.fermi-hint { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px; }
+.fermi-step input[type="range"] {
+  width: 100%; accent-color: var(--blue); margin: 4px 0;
+}
+.fermi-step.tone-low input[type="range"],
+.fermi-step.tone-baseline input[type="range"] { accent-color: #94a3b8; }
+.fermi-step.tone-typical input[type="range"] { accent-color: var(--green); }
+.fermi-step.tone-high input[type="range"] { accent-color: var(--amber); }
+.fermi-step.tone-bold input[type="range"] { accent-color: var(--red); }
+.fermi-anchors {
+  display: flex; justify-content: space-between; gap: 6px;
+  font-family: var(--mono); font-size: 0.66rem; color: var(--text-muted); margin-top: 2px;
+}
+.fermi-anchors span { flex: 1 1 0; }
+.fermi-anchors span:nth-child(2) { text-align: center; }
+.fermi-anchors span:last-child { text-align: right; }
+.fermi-value { font-family: var(--mono); font-weight: 700; color: var(--blue); }
+.fermi-arrow { text-align: center; font-size: 1.1rem; color: var(--text-muted); margin: -2px 0; }
+.fermi-formula {
+  font-family: var(--mono); font-size: 0.78rem;
+  color: var(--text-muted); background: #fefce8;
+  border: 1px dashed #d4a373; border-radius: 6px;
+  padding: 8px 12px; line-height: 1.55;
+}
+
+.assumption-tag {
+  display: inline-block; font-family: var(--mono);
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.02em;
+  padding: 1px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle;
+}
+.assumption-tag.tone-low,
+.assumption-tag.tone-baseline { background: #f1f5f9; color: #475569; }
+.assumption-tag.tone-typical { background: #dcfce7; color: #166534; }
+.assumption-tag.tone-high { background: #fef3c7; color: #92400e; }
+.assumption-tag.tone-bold { background: #fee2e2; color: #991b1b; }
+
+.impact-output {
+  font-family: var(--mono); background: var(--green-light);
+  border: 2px solid var(--green); border-radius: 8px;
+  padding: 14px 18px; margin-top: 12px;
+}
+.impact-big {
+  font-size: 1.8rem; font-weight: 700; color: var(--green);
+  display: block; margin-bottom: 4px;
+}
+.impact-detail { font-size: 0.78rem; color: var(--text-muted); }
+
+/* Cost breakdown */
+.cost-rows { display: flex; flex-direction: column; gap: 4px; }
+.cost-row {
+  display: grid; grid-template-columns: 1fr 140px;
+  gap: 14px; align-items: center; padding: 10px 0;
+  border-bottom: 1px solid #ece6d8;
+}
+.cost-row:last-of-type { border-bottom: none; }
+.cost-label { font-weight: 600; font-size: 0.92rem; }
+.cost-hint { font-size: 0.74rem; color: var(--text-muted); margin-top: 2px; }
+.cost-math { font-family: var(--mono); font-size: 0.74rem; color: var(--blue); margin-top: 4px; min-height: 1em; }
+.cost-input-wrap { position: relative; display: flex; align-items: center; gap: 6px; }
+.cost-input-wrap input[type="number"] {
+  width: 80px; padding: 9px 10px; text-align: right;
+  font-family: var(--mono); font-size: 0.92rem;
+  border: 1.5px solid var(--border-light); border-radius: 6px;
+}
+.cost-input-wrap .pre { font-family: var(--mono); color: var(--text-muted); }
+.cost-input-wrap .suf { font-size: 0.78rem; color: var(--text-muted); }
+.cost-total {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 8px; padding-top: 10px; border-top: 2px solid var(--border);
+  font-weight: 700;
+}
+.cost-total-amount { font-family: var(--mono); font-size: 1.1rem; }
+
+.roi-output {
+  font-family: var(--mono); background: #f3e8ff;
+  border: 2px solid #7c3aed; border-radius: 8px;
+  padding: 14px 18px; margin-top: 12px;
+}
+.roi-big {
+  font-size: 1.6rem; font-weight: 700; color: #7c3aed;
+  display: block; margin-bottom: 4px;
+}
+.roi-detail { font-size: 0.78rem; color: var(--text-muted); }
+
+/* Reasoning fields */
+.reasoning-field { margin-top: 14px; }
+.reasoning-field label { font-weight: 600; font-size: 0.92rem; margin-bottom: 4px; display: block; }
+.reasoning-field .optional-tag {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 500;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-muted); background: var(--bg);
+  padding: 2px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle;
+}
+.reasoning-field .hint { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px; }
+.char-count {
+  font-family: var(--mono); font-size: 0.7rem; color: var(--text-muted);
+  text-align: right; margin-top: 4px;
+}
+
+/* ===== Comparison reveal (solo equivalent of voting) ===== */
+.compare-banner {
+  background: #fef3c7; border: 1.5px solid #d4a800; border-radius: 8px;
+  padding: 12px 14px; margin-bottom: 16px;
+  font-size: 0.88rem; line-height: 1.55;
+}
+.compare-banner strong { color: #7c6600; }
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px; margin-bottom: 16px;
+}
+.compare-card {
+  background: #fff; border: 2px solid var(--border-light);
+  border-radius: 10px; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: all 0.15s;
+}
+.compare-card.yours {
+  border-color: var(--blue); background: var(--blue-light);
+}
+.compare-card.picked {
+  border-color: var(--green); box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
+  background: var(--green-light);
+}
+.cc-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.cc-name { font-weight: 700; font-size: 1.05rem; line-height: 1.2; }
+.cc-impact { font-family: var(--mono); font-size: 0.95rem; font-weight: 700; color: var(--green); white-space: nowrap; }
+.cc-numbers {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  padding: 8px 10px; background: #fafaf6; border-radius: 6px;
+}
+.cc-numbers > div { font-family: var(--mono); font-size: 0.78rem; text-align: center; }
+.cc-numbers .ccl {
+  display: block; font-size: 0.6rem; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;
+}
+.cc-lever { font-size: 0.88rem; font-weight: 600; }
+.cc-backed { font-size: 0.74rem; color: var(--text-muted); font-style: italic; margin-top: 2px; }
+.cc-assumptions {
+  font-size: 0.82rem; line-height: 1.55;
+  padding: 8px 10px; background: #fefce8;
+  border-left: 3px solid #d4a373; border-radius: 4px;
+}
+.cc-assumptions strong { color: var(--blue); }
+.cc-section-label {
+  display: block; font-family: var(--mono);
+  font-size: 0.62rem; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--text-muted);
+  font-weight: 600; margin-bottom: 4px;
+}
+.cc-plan {
+  font-size: 0.88rem; line-height: 1.55;
+  padding: 10px 12px; background: #ecfdf5;
+  border-left: 3px solid var(--green); border-radius: 4px;
+}
+.cc-reasoning {
+  font-size: 0.82rem; line-height: 1.5;
+  font-style: italic; color: var(--text);
+  padding: 10px 12px; background: #eef2ff;
+  border-left: 3px solid #6366f1; border-radius: 4px;
+}
+.cc-pick-btn {
+  margin-top: auto; padding: 10px 14px;
+  border: 2px solid var(--border); background: var(--card);
+  border-radius: 8px; font-weight: 700; cursor: pointer;
+  font-size: 0.9rem;
+}
+.compare-card.picked .cc-pick-btn { background: var(--green); color: white; border-color: var(--green); }
+
+/* ===== Success ===== */
+.success-card {
+  text-align: center; padding: 48px 32px;
+  background: var(--green-light); border: 2px solid var(--green);
+  border-radius: 16px; margin-top: 40px;
+}
+.success-icon { font-size: 3rem; margin-bottom: 12px; }
+
+/* Confidence slider */
+.confidence-row { display: flex; align-items: center; gap: 12px; }
+.confidence-row input[type="range"] { flex: 1; accent-color: var(--blue); }
+.confidence-value {
+  font-family: var(--mono); font-weight: 700; font-size: 1.1rem;
+  min-width: 64px; text-align: center;
+}
+
+/* Optional layout helpers */
+.flex { display: flex; }
+.flex.between { justify-content: space-between; }
+.flex.center { justify-content: center; }
+.flex.align-center { align-items: center; }
+.flex.gap-8 { gap: 8px; }
+.mt-8 { margin-top: 8px; } .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; }
+.mb-8 { margin-bottom: 8px; } .mb-16 { margin-bottom: 16px; } .mb-24 { margin-bottom: 24px; }
+.text-small { font-size: 0.82rem; }
+.text-muted { color: var(--text-muted); }
+.text-right { text-align: right; }
+.w-full { width: 100%; }
+</style>
+</head>
+<body>
+
+<!-- ===================== INTRO ===================== -->
+<div id="screen-intro">
+  <div class="container">
+    <div class="intro-inner">
+      <div class="intro-the">THE</div>
+      <div class="intro-title"><span class="intro-title-highlight">Design Case</span></div>
+      <div class="intro-rule"></div>
+      <div class="intro-badge">SOLO PRACTICE</div>
+      <div class="intro-subtitle">
+        Defend a design with numbers.<br>
+        Pick a lever, estimate the impact, pitch the budget.
+      </div>
+      <button class="primary" onclick="goRegister()">Start →</button>
+    </div>
+    <p class="text-small text-muted" style="text-align:center; margin-top:24px;">
+      Self-paced. About 20 minutes. Built for d.MBA's Prototyping with Numbers module.
+    </p>
+  </div>
+</div>
+
+<!-- ===================== REGISTRATION ===================== -->
+<div id="screen-register" class="hidden">
+  <div class="container" style="display:flex; align-items:center; justify-content:center; min-height:100vh;">
+    <div class="register-inner">
+      <div class="reg-header"><h1>Before you play</h1></div>
+      <p class="reg-subtitle">Make sure you're prepared, then jump in.</p>
+
+      <div class="reg-section-title">YOUR EMAIL</div>
+      <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email" style="margin-bottom: 4px;">
+
+      <div class="reg-section-title" style="margin-top:24px;">PRE-REQUISITE CHECKLIST</div>
+      <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:12px;">To get the most from this game, you should have completed the following:</p>
+      <ul class="checklist" id="prereq-list">
+        <li onclick="toggleCheck(this)" data-key="ondemand">
+          <div class="check-box">&#10003;</div>
+          <div class="check-text">
+            I've watched the on-demand content for this module
+            <small>The Prototyping with Numbers concepts and frameworks you'll apply in-game</small>
+          </div>
+        </li>
+        <li onclick="toggleCheck(this)" data-key="recording">
+          <div class="check-box">&#10003;</div>
+          <div class="check-text">
+            I've watched the first 30 minutes of the practice session recording
+            <small>The recap and Q&amp;A from live participants that sets the scene</small>
+          </div>
+        </li>
+      </ul>
+
+      <div id="reg-error" class="form-error">Please enter a valid email and check both items above.</div>
+      <button class="primary" style="width:100%; padding:14px 28px; margin-top:18px;" onclick="submitRegistration()">Continue &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== BRIEFING ===================== -->
+<div id="screen-briefing" class="hidden">
+  <div class="container">
+    <div class="overline">Step 1 of 4 — Read the brief</div>
+    <h1><span class="intro-title-highlight">The Onboarding Redesign</span></h1>
+    <p class="text-muted text-small mb-16 mt-8">Spend up to 10 minutes here. Read carefully, look at the numbers, the cliff, what users say. The lever you pick next depends on understanding where this business actually leaks.</p>
+
+    <!-- The Scene -->
+    <div class="card">
+      <div class="overline">The Scene</div>
+      <div class="scene-text" id="case-scene"></div>
+    </div>
+
+    <!-- The Numbers + glossary -->
+    <div class="card">
+      <div class="flex between align-center mb-8">
+        <div>
+          <div class="overline">The Numbers</div>
+          <h3 id="case-company">StreamFlow</h3>
+          <p class="text-small text-muted" id="case-tagline"></p>
+        </div>
+        <div style="background:#f0ebe0; padding:6px 14px; border-radius:6px; border:1px solid var(--border-light);">
+          <span class="text-small text-muted" style="font-family:var(--mono);" id="case-stage"></span>
+        </div>
+      </div>
+      <div class="metrics-grid" id="case-kpis"></div>
+    </div>
+
+    <!-- Step 5 in detail -->
+    <div class="card">
+      <div class="overline">Step 5 in detail — the cliff</div>
+      <p style="font-size:0.93rem; line-height:1.6;" id="step5-intro"></p>
+      <ul class="step5-tasks mt-16" id="step5-tasks"></ul>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-top:12px; font-style:italic;" id="step5-outro"></p>
+
+      <div class="overline mt-24 mb-8">The funnel</div>
+      <div class="funnel-chart" id="funnel-chart"></div>
+    </div>
+
+    <!-- Customer quotes -->
+    <div class="card">
+      <div class="overline">What users say</div>
+      <p class="text-small text-muted mb-8">From recent trial-user interviews. Make of them what you will.</p>
+      <ul class="quote-list" id="case-quotes"></ul>
+    </div>
+
+    <!-- Brief + Stakeholders + Challenge -->
+    <div class="card">
+      <div class="overline">The Brief</div>
+      <p style="font-size:0.95rem; line-height:1.7;" id="case-brief"></p>
+
+      <ul class="stakeholder-list mt-16" id="case-stakeholders"></ul>
+
+      <div style="margin-top:16px; padding:14px; background:#fef9c3; border-radius:8px; border:1px solid #d97706;">
+        <strong style="font-size:0.9rem;">Your challenge:</strong>
+        <p style="font-size:0.9rem; margin-top:6px; color:#713f12;" id="case-challenge"></p>
+      </div>
+    </div>
+
+    <div class="flex between align-center mt-16">
+      <button onclick="showScreen('screen-register')">← Back</button>
+      <button class="primary" onclick="goLevers()">Pick your lever →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LEVER PICKER ===================== -->
+<div id="screen-levers" class="hidden">
+  <div class="container">
+    <div class="overline">Step 2 of 4 — Pick your lever</div>
+    <h1><span class="intro-title-highlight">Whose case will you make?</span></h1>
+    <p class="text-muted text-small mb-16 mt-8">The redesign is the same. Pick the lever whose story you can tell strongest — and the exec who'll sign off because of it.</p>
+
+    <div class="card">
+      <div class="lever-grid" id="lever-grid"></div>
+
+      <div class="lever-explanation" id="lever-explanation">
+        <strong id="lever-exp-title"></strong>
+        <p class="text-small mt-8" id="lever-exp-text"></p>
+        <div class="lever-case" id="lever-exp-case" style="display:none;">
+          <div class="overline" style="color:#92400e;">For StreamFlow</div>
+          <p id="lever-exp-case-text" style="margin:0;"></p>
+        </div>
+        <div class="lever-backed" id="lever-exp-backed" style="display:none;">
+          <strong>Whose case you're making</strong>
+          <span id="lever-exp-backed-text"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex between align-center mt-16">
+      <button onclick="showScreen('screen-briefing')">← Back</button>
+      <button class="primary" id="lever-next-btn" disabled onclick="goEstimation()">Build your case →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ESTIMATION ===================== -->
+<div id="screen-estimation" class="hidden">
+  <div class="container">
+    <div class="overline">Step 3 of 4 — Build your case</div>
+    <h1><span class="intro-title-highlight">Show your numbers</span></h1>
+    <p class="text-muted text-small mb-16 mt-8">Spend about 10 minutes. Build the Fermi chain, allocate a realistic budget, write a one-line plan if you can. Defaults are reasonable starting points — adjust them and be ready to defend the delta.</p>
+
+    <!-- Baseline -->
+    <div class="card">
+      <div class="overline">Current state (your baseline)</div>
+      <div class="baseline-row">
+        <div class="baseline-cell"><div class="bcl">Trials/yr</div><div class="bcv">50,400</div><div class="bcs">4,200/mo × 12</div></div>
+        <div class="baseline-op">×</div>
+        <div class="baseline-cell"><div class="bcl">Conversion</div><div class="bcv">11%</div><div class="bcs">trial → paid</div></div>
+        <div class="baseline-op">×</div>
+        <div class="baseline-cell"><div class="bcl">Per customer</div><div class="bcv">$240/yr</div><div class="bcs">avg contract</div></div>
+        <div class="baseline-op">=</div>
+        <div class="baseline-cell total"><div class="bcl">New ARR/yr</div><div class="bcv">$1.33M</div><div class="bcs">5,544 customers</div></div>
+      </div>
+    </div>
+
+    <!-- Fermi chain — one block visible at a time -->
+    <div class="card">
+      <div class="overline">Build your estimate</div>
+      <div id="fermi-host"></div>
+
+      <div class="impact-output mt-16">
+        <span class="impact-big" id="impact-number">$0</span>
+        <div class="impact-detail" id="impact-detail">Additional ARR per year</div>
+      </div>
+
+      <!-- Plan + reasoning -->
+      <div class="reasoning-field">
+        <label for="plan-input">What you'd actually do — in one sentence <span class="optional-tag">optional</span></label>
+        <div class="hint">Concrete design move. "Defer the API-token paste"; "Replace the wizard with progressive prompts." Not "redesign onboarding."</div>
+        <textarea id="plan-input" maxlength="240" placeholder="e.g. 'Defer the API-token paste until after first edit; pre-populate folders from project metadata.'"></textarea>
+        <div class="char-count"><span id="plan-count">0</span> / 240</div>
+      </div>
+
+      <div class="reasoning-field">
+        <label for="reasoning-input">How you got there — explain in one sentence</label>
+        <div class="hint">Defend the bold assumptions. "We can recover 40% because step 5 is a single fixable cliff, not a vague slog."</div>
+        <textarea id="reasoning-input" maxlength="240" placeholder="e.g. 'We targeted step 5 because it's the cliff — most users get stuck on a single connect-asset action. We think a redesign recovers ~30% of those, at the current 11% conversion rate.'"></textarea>
+        <div class="char-count"><span id="reasoning-count">0</span> / 240</div>
+      </div>
+    </div>
+
+    <!-- Cost -->
+    <div class="card">
+      <div class="overline">Cost of the experiment</div>
+      <div class="reasoning-field">
+        <label>Time to ship: <span class="fermi-value" id="weeks-display">6 weeks</span></label>
+        <input type="range" id="weeks-slider" min="2" max="16" value="6" step="1">
+        <div class="fermi-anchors">
+          <span>2 weeks</span><span></span><span>16 weeks</span>
+        </div>
+      </div>
+
+      <label class="mt-16" style="display:block;">Where will the money go?</label>
+      <div class="cost-rows mt-8">
+        <div class="cost-row">
+          <div>
+            <div class="cost-label">Designers (in-house)</div>
+            <div class="cost-hint">≈ $2,500/week per designer</div>
+            <div class="cost-math" id="math-designers"></div>
+          </div>
+          <div class="cost-input-wrap">
+            <input type="number" id="count-designers" min="0" step="1" value="0">
+            <span class="suf">people</span>
+          </div>
+        </div>
+        <div class="cost-row">
+          <div>
+            <div class="cost-label">Engineers (in-house)</div>
+            <div class="cost-hint">≈ $3,500/week per engineer</div>
+            <div class="cost-math" id="math-engineers"></div>
+          </div>
+          <div class="cost-input-wrap">
+            <input type="number" id="count-engineers" min="0" step="1" value="0">
+            <span class="suf">people</span>
+          </div>
+        </div>
+        <div class="cost-row">
+          <div>
+            <div class="cost-label">User research</div>
+            <div class="cost-hint">Recruits, sessions, facilitator time</div>
+          </div>
+          <div class="cost-input-wrap">
+            <span class="pre">$</span>
+            <input type="number" id="cost-research" min="0" step="500" value="0">
+          </div>
+        </div>
+        <div class="cost-row">
+          <div>
+            <div class="cost-label">External help</div>
+            <div class="cost-hint">Agency, freelancer, contractor</div>
+          </div>
+          <div class="cost-input-wrap">
+            <span class="pre">$</span>
+            <input type="number" id="cost-external" min="0" step="1000" value="0">
+          </div>
+        </div>
+        <div class="cost-row">
+          <div>
+            <div class="cost-label">Tooling &amp; software</div>
+            <div class="cost-hint">A/B testing, analytics, prototyping subs</div>
+          </div>
+          <div class="cost-input-wrap">
+            <span class="pre">$</span>
+            <input type="number" id="cost-tooling" min="0" step="500" value="0">
+          </div>
+        </div>
+        <div class="cost-total">
+          <span>Total budget</span>
+          <span class="cost-total-amount" id="cost-total">$0</span>
+        </div>
+      </div>
+
+      <div class="roi-output">
+        <span class="roi-big" id="roi-display">—</span>
+        <div class="roi-detail" id="roi-detail">Allocate your budget to see your return</div>
+      </div>
+    </div>
+
+    <div class="flex between align-center mt-16">
+      <button onclick="goLevers()">← Back</button>
+      <button class="primary" id="estimation-next-btn" onclick="goCompare()">Submit & see how it compares →</button>
+    </div>
+    <p class="err" id="estimation-error" style="text-align:right;">Allocate at least some budget before continuing.</p>
+  </div>
+</div>
+
+<!-- ===================== COMPARISON / PICK ===================== -->
+<div id="screen-compare" class="hidden">
+  <div class="container">
+    <div class="overline">Step 4 of 4 — Compare and pick</div>
+    <h1><span class="intro-title-highlight">Eight pitches on the table.</span> Yours and seven others.</h1>
+    <p class="text-muted text-small mt-8">In the live workshop, teams vote on each other's pitches. On your own, the comparison is with seven prebuilt pitches we run as alternatives. Read them. Then pick the one <em>you'd</em> actually back if you had budget for one.</p>
+
+    <div class="compare-banner mt-16">
+      <strong>It can be your own pitch.</strong> The most interesting reflection is whether your case still holds up against seven other angles. Pick the strongest case as <em>you</em> see it.
+    </div>
+
+    <div class="compare-grid mt-16" id="compare-grid"></div>
+
+    <div class="flex between align-center mt-16">
+      <button onclick="goEstimation()">← Edit my pitch</button>
+      <button class="primary" id="compare-next-btn" disabled onclick="goReflect()">Continue to reflection →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== REFLECTION ===================== -->
+<div id="screen-reflect" class="hidden">
+  <div class="container">
+    <div class="overline">Reflection</div>
+    <h1><span class="intro-title-highlight">A few questions before you go.</span></h1>
+    <p class="text-muted text-small mt-8 mb-16">Your reflections are sent to admin@d.mba and a copy to you, alongside your pitch. Keep it honest — short is fine.</p>
+
+    <div class="card">
+      <label>How confident are you that your pitch would actually get funded? <span class="text-muted text-small">(if it had to)</span></label>
+      <div class="confidence-row">
+        <span class="text-small">1</span>
+        <input type="range" id="ref-confidence" min="1" max="10" value="6">
+        <span class="text-small">10</span>
+        <span class="confidence-value"><span id="ref-confidence-value">6</span>/10</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <label for="ref-takeaway">What's the biggest takeaway from building this pitch?</label>
+      <textarea id="ref-takeaway" placeholder="One thing you noticed about translating design into numbers, or about your own habits."></textarea>
+    </div>
+
+    <div class="card">
+      <label for="ref-application">Where would you apply this in your real work?</label>
+      <textarea id="ref-application" placeholder="A project, decision, or conversation where this muscle would help."></textarea>
+    </div>
+
+    <div class="card">
+      <label for="ref-surprise">Which other team's pitch surprised you most — and why?</label>
+      <textarea id="ref-surprise" placeholder="Which lever or angle did you find yourself drawn to that you wouldn't have picked yourself?"></textarea>
+    </div>
+
+    <div class="card">
+      <label for="ref-other">Anything else? <span class="optional-tag">optional</span></label>
+      <textarea id="ref-other" placeholder="Questions, frustrations, things you'd want from a follow-up session."></textarea>
+    </div>
+
+    <p class="err" id="ref-error">Answer the three required questions to send.</p>
+
+    <div class="flex between align-center mt-16">
+      <button onclick="goCompare()">← Back</button>
+      <button class="primary" id="ref-submit-btn" onclick="submitReflection()">Send my pitch & reflection →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SUCCESS ===================== -->
+<div id="screen-success" class="hidden">
+  <div class="container">
+    <div class="success-card">
+      <div class="success-icon">📨</div>
+      <h1>Sent.</h1>
+      <p class="mt-16 text-muted">Your pitch and reflection are on their way to <strong id="ref-confirm-email"></strong> and to the d.MBA team.</p>
+      <p class="mt-16 text-small text-muted">Want to try it again with a different lever or a bolder pitch?</p>
+      <button class="primary mt-16" onclick="playAgain()">Play again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   Case data — inlined from design-case/scripts/case.py.
+   Kept in sync manually for now (the multiplayer game is Python, this
+   solo build is pure static HTML so it can live on GitHub Pages).
+   ===================================================================== */
+const CASE = {
+  company: 'StreamFlow',
+  tagline: 'B2B SaaS — Video editing tool',
+  stage: 'Series A',
+  scene:
+    "StreamFlow is a 3-year-old video editing tool. Customers are mostly YouTubers, marketing teams, and small agencies — people who edit a lot of short videos and need it to be fast. They pay $20/month ($240/yr) and most teams sign up after a free 14-day trial.\n\n" +
+    "Revenue is healthy and growing, but only 1 in 9 trial-starters ever pays. The CEO has been told it's an onboarding problem — specifically, step 5, where users have to connect their existing brand-asset library. That's where most people quietly stop.\n\n" +
+    "Leadership has agreed onboarding needs a redesign. They have not agreed why. Five execs each want the redesign to do something different for the business — and each will sign off the budget if you can make their case work in numbers.",
+  kpis: {
+    arr: '$8M', customers: '~33,000', monthly_trials: '4,200', trial_to_paid: '11%',
+    acv: '$240/yr', annual_churn: '8%', support_per_customer: '$42/yr',
+    onboarding_steps: '9', drop_off_step5: '62%',
+  },
+  funnel: [
+    {step: 1, pct: 100}, {step: 2, pct: 95}, {step: 3, pct: 88}, {step: 4, pct: 75},
+    {step: 5, pct: 28, cliff: true}, {step: 6, pct: 25}, {step: 7, pct: 21},
+    {step: 8, pct: 14}, {step: 9, pct: 11},
+  ],
+  brief: "Five stories, one redesign. Each exec is willing to sign off the onboarding budget — but each wants a different financial argument. Same work; very different cases to make.",
+  challenge: "Pick the story you can defend best. The redesign is the same — what changes is which lever you tell the room you're moving, how big you think that lever swings, and the budget you'd ask for to do it.",
+  step5_detail: {
+    intro: "Step 5 is the brand-asset library connection — the cliff. Steps 1–4 are quick (\"what's your role?\", \"import your first video\"). Step 5 suddenly asks users to do five things at once, most of which require credentials or decisions they didn't come prepared for:",
+    sub_tasks: [
+      "Paste an API token from their brand-asset platform",
+      "Manually pick 3–5 folders to sync from a long list",
+      "Accept terms about file-sync permissions",
+      "Choose a sync frequency (daily / weekly / manual)",
+      "Enable email notifications for sync failures",
+    ],
+    outro: "About 62% of trial-starters bail at this screen. Many never come back.",
+  },
+  customer_quotes: [
+    { name: 'Sam', role: 'Marketing lead', quote: "I didn't have my API token ready. Got distracted finding it and lost the flow entirely." },
+    { name: 'Priya', role: 'Freelance editor', quote: "I wasn't sure which folders to share — am I supposed to give it everything? Felt risky." },
+    { name: 'Marco', role: 'YouTuber', quote: "The 'permissions to access your files' wording made me nervous. Closed the tab and never came back." },
+    { name: 'Lena', role: 'Agency producer', quote: "I came back to it a week later. Trial had ended. Didn't feel like restarting." },
+  ],
+  stakeholders: [
+    { role: 'The CEO', lever: 'more-customers', want: 'more paying customers',
+      quote: "Step 5 is where we lose them. Every trial-starter who never has to paste an API token is a paying customer we keep." },
+    { role: 'Sales', lever: 'higher-price', want: 'a higher price',
+      quote: "If the brand-asset connection felt confident instead of like a security warning, customers would believe in the product enough to pay $25 – $30 a month." },
+    { role: 'Head of Product', lever: 'more-frequency', want: 'better retention',
+      quote: "Users who quietly bail at step 5 never learn the brand-asset workflows — which is half the product. The ones who push through churn within months because they never got fluent." },
+    { role: 'Support', lever: 'lower-variable', want: 'fewer support tickets',
+      quote: "Half my tickets are 'how do I change the brand-asset sync?' or 'why didn't my assets show up?' — all downstream of the step 5 mess." },
+    { role: 'Engineering', lever: 'lower-fixed', want: 'a reusable connection system',
+      quote: "We've got Frame.io and Wistia integrations coming next quarter — they'll need the same connect-an-external-tool shape that step 5 is bungling. Build it once, reuse it everywhere." },
+  ],
+};
+
+const LEVERS = {
+  'more-customers': {
+    label: 'More customers', branch: 'revenue', short: 'conversion',
+    title: 'More customers (conversion improvement)',
+    explanation: "Better onboarding → higher trial-to-paid conversion rate → more paying customers. Every percentage point you move the conversion needle translates directly to new ARR.",
+    case_explanation: "Step 5 — the brand-asset connection — is where 62% of trials die. It's the single biggest leak in the funnel. Every sub-task you remove or defer (the API token, the folder picker, the permissions warning) is a recovered trial that has a chance to convert. You'll estimate how much of that 62% drop you can credibly claw back.",
+  },
+  'higher-price': {
+    label: 'Higher price', branch: 'revenue', short: 'perceived value',
+    title: 'Higher price (perceived value)',
+    explanation: "A cleaner onboarding experience signals quality and professionalism. Customers who have a great first experience perceive more value, and are more likely to accept a higher price point or upgrade to a premium tier.",
+    case_explanation: "Step 5's permissions warning and API-token paste currently make StreamFlow feel like a risky utility, not a confident tool. At $240/yr they're priced below most B2B video editors. If the brand-asset connection felt confident — guided, reversible, low-stakes — new customers could accept a higher price for the same product. You'll estimate the new ACV and how many new customers accept it.",
+  },
+  'more-frequency': {
+    label: 'More frequency', branch: 'revenue', short: 'retention',
+    title: 'More frequency (retention & engagement)',
+    explanation: "Customers who complete onboarding successfully use the product more. Higher engagement → lower churn → higher lifetime value. Onboarding is the foundation of long-term retention.",
+    case_explanation: "Annual churn is 8% on 33,000 customers — $634K of ARR walking out the door each year. Most of that churn isn't sudden; it's people who pushed through step 5, never properly learned the brand-asset workflows (half the product), and quietly lapsed within months. A step 5 that actually teaches keeps them fluent enough to stick. You'll estimate how much of that churn you prevent.",
+  },
+  'lower-variable': {
+    label: 'Lower variable costs', branch: 'costs', short: 'ops efficiency',
+    title: 'Lower variable costs (operational efficiency)',
+    explanation: "Confused users create support tickets. A better onboarding experience means fewer people getting stuck → less support volume → lower cost-per-customer to serve.",
+    case_explanation: "Support costs $42/customer/year — $1.39M across the base. A huge share of those tickets are brand-asset questions: 'how do I change my sync settings?', 'why didn't my assets show up?', 'how do I revoke the connection?' — all caused by step 5 being a one-shot wizard with no obvious way back in. You'll estimate the reduction in tickets per customer.",
+  },
+  'lower-fixed': {
+    label: 'Lower fixed costs', branch: 'costs', short: 'dev efficiency',
+    title: 'Lower fixed costs (development efficiency)',
+    explanation: "A design system built as part of the onboarding redesign can be reused across the product → faster development → lower engineering costs for future features.",
+    case_explanation: "Engineering already has Frame.io and Wistia integrations on the near-term roadmap — both need the same connect-an-external-tool shape that step 5 is currently bungling. Build it once as a reusable connection pattern (auth, permissions, sync settings, re-entry) and the next two integrations are mostly configuration. You'll estimate how many features reuse it and the dev time saved per feature.",
+  },
+};
+
+const HEADCOUNT_RATES = { designers: 2500, engineers: 3500 };
+
+// Prebuilt bot pitches — these are the seven "other teams" the solo player sees
+// in the comparison view. Mirrors design-case/scripts/case.py BOT_PITCHES.
+const BOT_PITCHES = [
+  { name: 'Pixel Pilots', lever: 'more-customers', impact: 52000, weeks: 4,
+    cost_breakdown: { designers: 10000, designers_count: 1, engineers: 14000, engineers_count: 1, research: 6000, external: 0, tooling: 0 },
+    total_cost: 30000,
+    plan: "Defer the API-token paste until after first edit. Keep the rest of step 5 as-is for now.",
+    reasoning: "Recover ~20% of step-5 drop-off; assume converted at the existing 11% rate.",
+    assumptions: { recovered_pct: 20, conv_pct: 11 } },
+  { name: 'UX Unicorns', lever: 'more-frequency', impact: 180000, weeks: 10,
+    cost_breakdown: { designers: 50000, designers_count: 2, engineers: 35000, engineers_count: 1, research: 25000, external: 0, tooling: 10000 },
+    total_cost: 120000,
+    plan: "Replace the wizard with progressive prompts inside the editor itself — connect, learn, and use in one flow.",
+    reasoning: "Cut annual churn by ~28% — better onboarding means fewer 'I never figured it out' cancels.",
+    assumptions: { churn_reduction_pct: 28 } },
+  { name: 'The Researchers', lever: 'more-customers', impact: 28000, weeks: 4,
+    cost_breakdown: { designers: 0, designers_count: 0, engineers: 0, engineers_count: 0, research: 8000, external: 0, tooling: 0 },
+    total_cost: 8000,
+    plan: "Five user interviews first — find out exactly which sub-task kills people, then design only that.",
+    reasoning: "Modest ~10% step-5 recovery; small bet, we run research first before building.",
+    assumptions: { recovered_pct: 10, conv_pct: 11 } },
+  { name: 'Conversion Crew', lever: 'higher-price', impact: 45000, weeks: 6,
+    cost_breakdown: { designers: 15000, designers_count: 1, engineers: 0, engineers_count: 0, research: 5000, external: 0, tooling: 0 },
+    total_cost: 20000,
+    plan: "Rewrite the permissions copy as plain English, add a 'Pro' tier badge, and lift the new-customer price to $25/month.",
+    reasoning: "Raise new-customer contract value to $280 with ~80% acceptance — onboarding polish carries the premium.",
+    assumptions: { new_acv: 280, acceptance_pct: 80 } },
+  { name: 'Lean Loop', lever: 'lower-variable', impact: 95000, weeks: 8,
+    cost_breakdown: { designers: 20000, designers_count: 1, engineers: 28000, engineers_count: 1, research: 0, external: 12000, tooling: 0 },
+    total_cost: 60000,
+    plan: "Add an inline help panel during step 5 that pre-answers the top 5 brand-asset support tickets we already see.",
+    reasoning: "Cut support tickets per customer by ~7%; ticket savings compound across the base.",
+    assumptions: { support_reduction_pct: 7 } },
+  { name: 'Dev Squad', lever: 'lower-fixed', impact: 60000, weeks: 6,
+    cost_breakdown: { designers: 15000, designers_count: 1, engineers: 21000, engineers_count: 1, research: 0, external: 0, tooling: 4000 },
+    total_cost: 40000,
+    plan: "Build step 5 as a reusable 'external-tool connection' component. Frame.io and Wistia integrations next quarter use the same one.",
+    reasoning: "Reusable onboarding system saves ~20% dev time on the next 3 onboarding-shaped features.",
+    assumptions: { features_reused: 3, dev_saved_pct: 20 } },
+  { name: 'Funnel Fixers', lever: 'more-customers', impact: 110000, weeks: 8,
+    cost_breakdown: { designers: 40000, designers_count: 2, engineers: 28000, engineers_count: 1, research: 7000, external: 0, tooling: 0 },
+    total_cost: 75000,
+    plan: "Skip step 5 entirely on first run. Pre-populate from public sources; let users add their brand library later, in context.",
+    reasoning: "Recover ~40% of step-5 drop-off — bold but justified by step 5 being a single, fixable cliff.",
+    assumptions: { recovered_pct: 40, conv_pct: 11 } },
+];
+
+const KPI_LABELS = {
+  arr: 'ARR', customers: 'Active customers', monthly_trials: 'Monthly trials',
+  trial_to_paid: 'Trial → paid', acv: 'Avg contract value', annual_churn: 'Annual churn',
+  support_per_customer: 'Support cost / customer', onboarding_steps: 'Onboarding steps',
+  drop_off_step5: 'Drop-off @ step 5',
+};
+const KPI_GLOSSARY = {
+  arr: '<strong>Annual Recurring Revenue</strong> — the headline number for a SaaS business. Total yearly income from current paying subscribers.',
+  customers: 'Paying subscribers right now. Different from trial users — these people are giving the business money every year.',
+  monthly_trials: 'People who start a free trial each month. The top of the funnel.',
+  trial_to_paid: 'Of trial users, the % who become paying customers. The most important conversion number on this page.',
+  acv: '<strong>Average Contract Value</strong> — what one customer pays per year. ($20/mo × 12 here.)',
+  annual_churn: 'The % of paying customers who cancel each year. 8% means roughly 1 in 12 leaves annually.',
+  support_per_customer: "What it costs the business to handle one customer's support tickets and questions, per year.",
+  onboarding_steps: 'How many setup screens a new user walks through before they\'re "in" and using the product.',
+  drop_off_step5: 'The % of users who never finish step 5. The bigger this is, the more conversion is leaking.',
+};
+
+/* =====================================================================
+   EmailJS — reuses the d.MBA shared service + templates.
+   ===================================================================== */
+const EMAILJS_PUBLIC_KEY = 'C16RP8PBnTudO3pTa';
+const EMAILJS_SERVICE_ID = 'service_vgc4x29';
+const EMAILJS_ADMIN_TEMPLATE = 'template_04i67k6';
+const EMAILJS_CONFIRM_TEMPLATE = 'template_fwackuq';
+const ADMIN_EMAIL = 'admin@d.mba';
+const GAME_NAME = 'The Design Case';
+
+/* =====================================================================
+   State
+   ===================================================================== */
+const TRIALS_PER_YEAR = 50400;
+const STEP5_DROPOFF = 0.62;
+const CURRENT_CONV = 0.11;
+const CURRENT_ACV = 240;
+const TOTAL_CUSTOMERS = 33000;
+const CURRENT_CHURN = 0.08;
+const SUPPORT_PER_CUSTOMER = 42;
+const DEV_COST_PER_FEATURE = 50000;
+
+let player = {
+  email: '',
+  lever: null,
+  impact: 0,
+  weeks: 6,
+  designers_count: 0,
+  engineers_count: 0,
+  research: 0,
+  external: 0,
+  tooling: 0,
+  plan: '',
+  reasoning: '',
+  assumptions: {},
+};
+let checklistState = { ondemand: false, recording: false };
+let comparePickIndex = null;   // 0..7 — 0 is player, 1..7 are bots
+let comparePool = [];          // populated when entering compare screen
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function fmtMoney(n) {
+  if (n === undefined || n === null || isNaN(n)) return '$0';
+  return '$' + Math.round(n).toLocaleString('en-US');
+}
+function showScreen(id) {
+  document.querySelectorAll('body > div[id^="screen-"]').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo({ top: 0 });
+}
+
+/* ---------- Registration ---------- */
+function goRegister() { showScreen('screen-register'); }
+function toggleCheck(li) {
+  checklistState[li.dataset.key] = !checklistState[li.dataset.key];
+  li.classList.toggle('checked', checklistState[li.dataset.key]);
+}
+function submitRegistration() {
+  const email = document.getElementById('reg-email').value.trim();
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const allChecked = checklistState.ondemand && checklistState.recording;
+  const errEl = document.getElementById('reg-error');
+  if (!valid || !allChecked) { errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+  player.email = email;
+  renderBriefing();
+  showScreen('screen-briefing');
+}
+
+/* ---------- Briefing ---------- */
+function renderBriefing() {
+  document.getElementById('case-company').textContent = CASE.company;
+  document.getElementById('case-tagline').textContent = CASE.tagline;
+  document.getElementById('case-stage').textContent = CASE.stage;
+  document.getElementById('case-scene').textContent = CASE.scene;
+  document.getElementById('case-brief').textContent = CASE.brief;
+  document.getElementById('case-challenge').textContent = CASE.challenge;
+
+  // KPIs with glossary
+  const grid = document.getElementById('case-kpis');
+  grid.innerHTML = Object.entries(CASE.kpis).map(([k, v]) => {
+    const gloss = KPI_GLOSSARY[k] || '';
+    return `
+      <div class="metric-item">
+        <div class="metric-label">${esc(KPI_LABELS[k] || k)}</div>
+        <div class="metric-value">${esc(v)}</div>
+        ${gloss ? `<div class="metric-explanation">${gloss}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  // Step 5 detail
+  document.getElementById('step5-intro').textContent = CASE.step5_detail.intro;
+  document.getElementById('step5-outro').textContent = CASE.step5_detail.outro;
+  document.getElementById('step5-tasks').innerHTML =
+    CASE.step5_detail.sub_tasks.map(t => `<li>${esc(t)}</li>`).join('');
+
+  // Funnel
+  document.getElementById('funnel-chart').innerHTML = CASE.funnel.map(s => `
+    <div class="funnel-row ${s.cliff ? 'cliff' : ''}">
+      <div class="funnel-label">Step ${s.step}${s.cliff ? ' ← cliff' : ''}</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${s.pct}%;"></div></div>
+      <div class="funnel-pct">${s.pct}%</div>
+    </div>`).join('');
+
+  // Quotes
+  document.getElementById('case-quotes').innerHTML = CASE.customer_quotes.map(q => `
+    <li>
+      <p class="quote-text">"${esc(q.quote)}"</p>
+      <span class="quote-attrib">— ${esc(q.name)}, ${esc(q.role)}</span>
+    </li>`).join('');
+
+  // Stakeholders
+  document.getElementById('case-stakeholders').innerHTML = CASE.stakeholders.map(s => `
+    <li>
+      <div class="stakeholder-role">${esc(s.role)}<span class="stakeholder-want">wants ${esc(s.want)}</span></div>
+      <div class="stakeholder-quote">"${esc(s.quote)}"</div>
+    </li>`).join('');
+}
+
+/* ---------- Lever picker ---------- */
+function goLevers() {
+  renderLeverGrid();
+  showScreen('screen-levers');
+}
+function renderLeverGrid() {
+  document.getElementById('lever-grid').innerHTML = Object.entries(LEVERS).map(([id, L]) => {
+    const sel = player.lever === id ? 'selected' : '';
+    return `<button class="lever-card ${sel}" onclick="pickLever('${id}')">
+      <div class="lever-label">${esc(L.label)}</div>
+      <div class="lever-branch">${esc(L.branch)} · ${esc(L.short)}</div>
+    </button>`;
+  }).join('');
+  refreshLeverExplanation();
+}
+function pickLever(id) {
+  player.lever = player.lever === id ? null : id;
+  // Reset assumptions when changing lever (they're lever-specific)
+  player.assumptions = {};
+  player.impact = 0;
+  renderLeverGrid();
+}
+function refreshLeverExplanation() {
+  const expEl = document.getElementById('lever-explanation');
+  const btn = document.getElementById('lever-next-btn');
+  if (!player.lever) {
+    expEl.classList.remove('visible');
+    btn.disabled = true;
+    return;
+  }
+  const L = LEVERS[player.lever];
+  document.getElementById('lever-exp-title').textContent = L.title;
+  document.getElementById('lever-exp-text').textContent = L.explanation;
+  document.getElementById('lever-exp-case-text').textContent = L.case_explanation;
+  document.getElementById('lever-exp-case').style.display = '';
+  const sh = CASE.stakeholders.find(s => s.lever === player.lever);
+  if (sh) {
+    document.getElementById('lever-exp-backed-text').innerHTML =
+      `Backed by <strong style="display:inline; font-family:inherit; text-transform:none; letter-spacing:0; color:inherit; font-size:inherit; margin:0;">${esc(sh.role)}</strong> — wants ${esc(sh.want)}.<br><em>"${esc(sh.quote)}"</em>`;
+    document.getElementById('lever-exp-backed').style.display = '';
+  } else {
+    document.getElementById('lever-exp-backed').style.display = 'none';
+  }
+  expEl.classList.add('visible');
+  btn.disabled = false;
+}
+
+/* ---------- Estimation ---------- */
+function goEstimation() {
+  if (!player.lever) { goLevers(); return; }
+  renderFermiHost();
+  bindEstimationInputs();
+  refreshAllCalcs();
+  showScreen('screen-estimation');
+}
+
+/* Per-lever Fermi chain markup */
+function renderFermiHost() {
+  const host = document.getElementById('fermi-host');
+  const blocks = {
+    'more-customers': `
+      <div class="fermi-chain" data-lever="more-customers">
+        <div class="fermi-step" data-key="recovered_pct">
+          <div class="fermi-prompt">1. Of the trials that drop at step 5, what % can a better onboarding recover?</div>
+          <div class="fermi-hint">~31,250 trials/yr stall at step 5 (50,400 × 62%). Step 5 is a single fixable cliff — the question is how much of that cliff you can climb back.</div>
+          <input type="range" id="recovered-slider" min="5" max="60" value="30" step="1">
+          <div class="fermi-anchors"><span>10% conservative</span><span>30% typical for a strong redesign</span><span>50% bold</span></div>
+          <div class="mt-8">You think you can recover <span class="fermi-value" id="recovered-display">30%</span> — about <span class="fermi-value" id="recovered-count">9,375</span> trials/yr.</div>
+        </div>
+        <div class="fermi-arrow">↓</div>
+        <div class="fermi-step" data-key="conv_pct">
+          <div class="fermi-prompt">2. Of those recovered trials, what % then become paying customers?</div>
+          <div class="fermi-hint">StreamFlow's current trial→paid rate is 11%. A better onboarding might also lift the quality of intent.</div>
+          <input type="range" id="conv-slider" min="5" max="25" value="11" step="0.5">
+          <div class="fermi-anchors"><span>11% current rate</span><span>15% modest lift</span><span>20% strong lift</span></div>
+          <div class="mt-8">You assume <span class="fermi-value" id="conv-display">11%</span> of recovered trials convert.</div>
+        </div>
+        <div class="fermi-arrow">↓</div>
+        <div class="fermi-formula" id="formula"></div>
+      </div>`,
+    'higher-price': `
+      <div class="fermi-chain" data-lever="higher-price">
+        <div class="fermi-step" data-key="new_acv">
+          <div class="fermi-prompt">1. What new average contract value (ACV) does the redesigned experience justify?</div>
+          <div class="fermi-hint">Each customer currently pays $240/yr. A premium feel can carry a higher price — but only if the experience genuinely justifies it.</div>
+          <input type="range" id="price-slider" min="240" max="400" value="280" step="10">
+          <div class="fermi-anchors"><span>$240 current</span><span>$280 modest premium</span><span>$360 premium tier</span></div>
+          <div class="mt-8">New contract value: <span class="fermi-value" id="price-display">$280</span>/yr (+<span class="fermi-value" id="price-delta-display">$40</span>/yr per customer).</div>
+        </div>
+        <div class="fermi-arrow">↓</div>
+        <div class="fermi-step" data-key="acceptance_pct">
+          <div class="fermi-prompt">2. What % of new customers accept the new price?</div>
+          <div class="fermi-hint">Some customers will balk at the higher price. The cleaner the experience, the higher this number can be.</div>
+          <input type="range" id="acceptance-slider" min="50" max="100" value="80" step="5">
+          <div class="fermi-anchors"><span>50% half walk away</span><span>80% with a quality jump</span><span>100% invisible</span></div>
+          <div class="mt-8"><span class="fermi-value" id="acceptance-display">80%</span> of new customers pay the new price.</div>
+        </div>
+        <div class="fermi-arrow">↓</div>
+        <div class="fermi-formula" id="formula"></div>
+      </div>`,
+    'more-frequency': `
+      <div class="fermi-chain" data-lever="more-frequency">
+        <div class="fermi-step" data-key="churn_reduction_pct">
+          <div class="fermi-prompt">1. How much do you reduce annual churn?</div>
+          <div class="fermi-hint">Current churn is 8% on 33,000 customers — $634K of ARR walking out each year. Cutting that means more customers stick around fluently.</div>
+          <input type="range" id="churn-slider" min="5" max="40" value="15" step="1">
+          <div class="fermi-anchors"><span>10% modest</span><span>20% strong</span><span>30% extraordinary</span></div>
+          <div class="mt-8">Churn reduction: <span class="fermi-value" id="churn-display">15%</span> — about <span class="fermi-value" id="churn-saved-count">396</span> customers retained.</div>
+        </div>
+        <div class="fermi-arrow">↓</div>
+        <div class="fermi-formula" id="formula"></div>
+      </div>`,
+    'lower-variable': `
+      <div class="fermi-chain" data-lever="lower-variable">
+        <div class="fermi-step" data-key="support_reduction_pct">
+          <div class="fermi-prompt">1. How much do you reduce support tickets per customer?</div>
+          <div class="fermi-hint">Support costs $42/customer/year — $1.39M across the base. Better onboarding answers "how do I do X" before the user has to ask.</div>
+          <input type="range" id="support-slider" min="5" max="50" value="25" step="1">
+          <div class="fermi-anchors"><span>10% conservative</span><span>25% with clearer onboarding</span><span>40% with built-in help</span></div>
+          <div class="mt-8">Ticket reduction: <span class="fermi-value" id="support-display">25%</span>.</div>
+        </div>
+        <div class="fermi-arrow">↓</div>
+        <div class="fermi-formula" id="formula"></div>
+      </div>`,
+    'lower-fixed': `
+      <div class="fermi-chain" data-lever="lower-fixed">
+        <div class="fermi-step" data-key="features_reused">
+          <div class="fermi-prompt">1. How many onboarding-shaped features will reuse this system next year?</div>
+          <div class="fermi-hint">Reusable systems pay off proportionally to how many features reuse them. Think: new sign-up flows, settings wizards, billing screens.</div>
+          <input type="range" id="reuse-slider" min="1" max="10" value="3" step="1">
+          <div class="fermi-anchors"><span>1 light</span><span>3 healthy backlog</span><span>8 aggressive</span></div>
+          <div class="mt-8">Reused on <span class="fermi-value" id="reuse-display">3</span> future features.</div>
+        </div>
+        <div class="fermi-arrow">↓</div>
+        <div class="fermi-step" data-key="dev_saved_pct">
+          <div class="fermi-prompt">2. How much dev time does each reuse save?</div>
+          <div class="fermi-hint">Assume avg dev cost of $50K per onboarding-shaped feature when built from scratch.</div>
+          <input type="range" id="dev-slider" min="5" max="50" value="20" step="1">
+          <div class="fermi-anchors"><span>10% small</span><span>25% solid system</span><span>40% deep reuse</span></div>
+          <div class="mt-8"><span class="fermi-value" id="dev-display">20%</span> of dev time saved per feature.</div>
+        </div>
+        <div class="fermi-arrow">↓</div>
+        <div class="fermi-formula" id="formula"></div>
+      </div>`,
+  };
+  host.innerHTML = blocks[player.lever] || '';
+}
+
+function bindEstimationInputs() {
+  // Reasoning + plan
+  const planEl = document.getElementById('plan-input');
+  const planCount = document.getElementById('plan-count');
+  planEl.value = player.plan || '';
+  planCount.textContent = (player.plan || '').length;
+  planEl.oninput = () => { player.plan = planEl.value; planCount.textContent = planEl.value.length; };
+
+  const rEl = document.getElementById('reasoning-input');
+  const rCount = document.getElementById('reasoning-count');
+  rEl.value = player.reasoning || '';
+  rCount.textContent = (player.reasoning || '').length;
+  rEl.oninput = () => { player.reasoning = rEl.value; rCount.textContent = rEl.value.length; };
+
+  // Weeks
+  const wEl = document.getElementById('weeks-slider');
+  wEl.value = player.weeks || 6;
+  wEl.oninput = () => { player.weeks = parseInt(wEl.value, 10); updateCostCalc(); };
+
+  // Cost inputs
+  ['designers', 'engineers'].forEach(b => {
+    const el = document.getElementById('count-' + b);
+    el.value = player[b + '_count'] || 0;
+    el.oninput = updateCostCalc;
+  });
+  ['research', 'external', 'tooling'].forEach(b => {
+    const el = document.getElementById('cost-' + b);
+    el.value = player[b] || 0;
+    el.oninput = updateCostCalc;
+  });
+
+  // Lever-specific sliders
+  const sliderBinds = {
+    'more-customers': [['recovered-slider', updateConvCalc], ['conv-slider', updateConvCalc]],
+    'higher-price': [['price-slider', updatePriceCalc], ['acceptance-slider', updatePriceCalc]],
+    'more-frequency': [['churn-slider', updateChurnCalc]],
+    'lower-variable': [['support-slider', updateSupportCalc]],
+    'lower-fixed': [['reuse-slider', updateDevCalc], ['dev-slider', updateDevCalc]],
+  };
+  (sliderBinds[player.lever] || []).forEach(([id, fn]) => {
+    document.getElementById(id).oninput = fn;
+  });
+}
+
+function refreshAllCalcs() {
+  const calc = {
+    'more-customers': updateConvCalc, 'higher-price': updatePriceCalc,
+    'more-frequency': updateChurnCalc, 'lower-variable': updateSupportCalc,
+    'lower-fixed': updateDevCalc,
+  }[player.lever];
+  if (calc) calc();
+  updateCostCalc();
+}
+
+/* Assumption classification — same thresholds as multiplayer. */
+function classifyAssumption(lever, key, value) {
+  const v = Number(value);
+  if (!isFinite(v)) return null;
+  function band(value, thresholds, labels) {
+    let i = 0;
+    while (i < thresholds.length && value > thresholds[i]) i++;
+    return { label: labels[i], tone: ['low', 'typical', 'high', 'bold'][Math.min(i, 3)] };
+  }
+  if (lever === 'more-customers') {
+    if (key === 'recovered_pct') return band(v, [15, 35, 45, 100], ['conservative', 'typical', 'aggressive', 'very bold']);
+    if (key === 'conv_pct') {
+      if (v <= 11) return { label: 'at current rate', tone: 'baseline' };
+      return band(v, [11, 15, 20, 100], [null, 'modest lift', 'strong lift', 'extraordinary']);
+    }
+  }
+  if (lever === 'higher-price') {
+    if (key === 'new_acv') {
+      if (v <= 240) return { label: 'no change', tone: 'baseline' };
+      return band(v, [255, 295, 340, 9999], ['barely a bump', 'modest premium', 'meaningful premium', 'aggressive']);
+    }
+    if (key === 'acceptance_pct') return band(v, [60, 85, 95, 100], ['many walk away', 'realistic', 'optimistic', 'near-universal']);
+  }
+  if (lever === 'more-frequency' && key === 'churn_reduction_pct')
+    return band(v, [10, 20, 30, 100], ['modest', 'strong', 'extraordinary', 'implausible']);
+  if (lever === 'lower-variable' && key === 'support_reduction_pct')
+    return band(v, [10, 25, 40, 100], ['conservative', 'realistic', 'aggressive', 'very bold']);
+  if (lever === 'lower-fixed') {
+    if (key === 'features_reused') return band(v, [1, 4, 7, 100], ['light bet', 'healthy backlog', 'aggressive', 'assumes a lot']);
+    if (key === 'dev_saved_pct') return band(v, [15, 30, 40, 100], ['small reuse', 'solid system', 'deep reuse', 'extraordinary']);
+  }
+  return null;
+}
+function classificationTagHtml(c) {
+  if (!c || !c.label) return '';
+  return ` <span class="assumption-tag tone-${c.tone}">(${esc(c.label)})</span>`;
+}
+function applyStepTone(stepEl, c) {
+  if (!stepEl) return;
+  stepEl.classList.remove('tone-low', 'tone-baseline', 'tone-typical', 'tone-high', 'tone-bold');
+  if (c && c.tone) stepEl.classList.add('tone-' + c.tone);
+}
+function setFermiValue(displayId, valueText, classification) {
+  const el = document.getElementById(displayId);
+  if (!el) return;
+  el.textContent = valueText;
+  const parent = el.parentElement;
+  if (!parent) return;
+  parent.querySelectorAll('.assumption-tag.inline-tag').forEach(n => n.remove());
+  if (classification && classification.label) {
+    const tag = document.createElement('span');
+    tag.className = 'assumption-tag inline-tag tone-' + classification.tone;
+    tag.textContent = '(' + classification.label + ')';
+    el.insertAdjacentElement('afterend', tag);
+  }
+  const step = el.closest('.fermi-step');
+  applyStepTone(step, classification);
+}
+
+function updateConvCalc() {
+  const recovered = parseFloat(document.getElementById('recovered-slider').value);
+  const conv = parseFloat(document.getElementById('conv-slider').value);
+  const droppedTrials = Math.round(TRIALS_PER_YEAR * STEP5_DROPOFF);
+  const recoveredTrials = Math.round(droppedTrials * (recovered / 100));
+  const newCustomers = Math.round(recoveredTrials * (conv / 100));
+  const addlARR = newCustomers * CURRENT_ACV;
+  setFermiValue('recovered-display', recovered + '%', classifyAssumption('more-customers', 'recovered_pct', recovered));
+  document.getElementById('recovered-count').textContent = recoveredTrials.toLocaleString();
+  setFermiValue('conv-display', conv.toFixed(1) + '%', classifyAssumption('more-customers', 'conv_pct', conv));
+  document.getElementById('formula').innerHTML =
+    `${droppedTrials.toLocaleString()} dropped trials × <strong>${recovered}%</strong> recovered × <strong>${conv.toFixed(1)}%</strong> convert × $${CURRENT_ACV}/yr per customer = <strong>${newCustomers.toLocaleString()} new paying customers</strong>`;
+  player.impact = addlARR;
+  player.assumptions = { recovered_pct: recovered, conv_pct: conv };
+  document.getElementById('impact-number').textContent = fmtMoney(addlARR);
+  document.getElementById('impact-detail').textContent = `Additional new ARR per year (${newCustomers.toLocaleString()} new customers at $${CURRENT_ACV}/yr each)`;
+  updateCostCalc();
+}
+function updatePriceCalc() {
+  const newAcv = parseInt(document.getElementById('price-slider').value, 10);
+  const acceptance = parseInt(document.getElementById('acceptance-slider').value, 10);
+  const delta = newAcv - CURRENT_ACV;
+  const newCustomersPerYear = Math.round(TRIALS_PER_YEAR * CURRENT_CONV);
+  const accepting = Math.round(newCustomersPerYear * (acceptance / 100));
+  const addlARR = accepting * delta;
+  setFermiValue('price-display', '$' + newAcv, classifyAssumption('higher-price', 'new_acv', newAcv));
+  document.getElementById('price-delta-display').textContent = '$' + delta;
+  setFermiValue('acceptance-display', acceptance + '%', classifyAssumption('higher-price', 'acceptance_pct', acceptance));
+  document.getElementById('formula').innerHTML =
+    `${newCustomersPerYear.toLocaleString()} new customers/yr × <strong>${acceptance}%</strong> accept × <strong>+$${delta}/yr</strong> per customer = <strong>${accepting.toLocaleString()} customers paying the premium</strong>`;
+  player.impact = addlARR;
+  player.assumptions = { new_acv: newAcv, acceptance_pct: acceptance };
+  document.getElementById('impact-number').textContent = fmtMoney(addlARR);
+  document.getElementById('impact-detail').textContent = `Additional ARR per year from the new price`;
+  updateCostCalc();
+}
+function updateChurnCalc() {
+  const reduction = parseInt(document.getElementById('churn-slider').value, 10);
+  const arrAtRisk = TOTAL_CUSTOMERS * CURRENT_ACV * CURRENT_CHURN;
+  const saved = Math.round(arrAtRisk * (reduction / 100));
+  const customersRetained = Math.round(TOTAL_CUSTOMERS * CURRENT_CHURN * (reduction / 100));
+  setFermiValue('churn-display', reduction + '%', classifyAssumption('more-frequency', 'churn_reduction_pct', reduction));
+  document.getElementById('churn-saved-count').textContent = customersRetained.toLocaleString();
+  document.getElementById('formula').innerHTML =
+    `${TOTAL_CUSTOMERS.toLocaleString()} customers × <strong>8%</strong> annual churn × <strong>${reduction}%</strong> reduction × $${CURRENT_ACV}/yr per customer = <strong>${customersRetained.toLocaleString()} customers kept</strong>`;
+  player.impact = saved;
+  player.assumptions = { churn_reduction_pct: reduction };
+  document.getElementById('impact-number').textContent = fmtMoney(saved);
+  document.getElementById('impact-detail').textContent = `Saved ARR per year from retained customers`;
+  updateCostCalc();
+}
+function updateSupportCalc() {
+  const reduction = parseInt(document.getElementById('support-slider').value, 10);
+  const totalSupport = TOTAL_CUSTOMERS * SUPPORT_PER_CUSTOMER;
+  const saved = Math.round(totalSupport * (reduction / 100));
+  setFermiValue('support-display', reduction + '%', classifyAssumption('lower-variable', 'support_reduction_pct', reduction));
+  document.getElementById('formula').innerHTML =
+    `${TOTAL_CUSTOMERS.toLocaleString()} customers × $${SUPPORT_PER_CUSTOMER} support/yr × <strong>${reduction}%</strong> fewer tickets = <strong>${fmtMoney(saved)} saved</strong>`;
+  player.impact = saved;
+  player.assumptions = { support_reduction_pct: reduction };
+  document.getElementById('impact-number').textContent = fmtMoney(saved);
+  document.getElementById('impact-detail').textContent = `Annual support cost savings`;
+  updateCostCalc();
+}
+function updateDevCalc() {
+  const reused = parseInt(document.getElementById('reuse-slider').value, 10);
+  const saved_pct = parseInt(document.getElementById('dev-slider').value, 10);
+  const saved = Math.round(reused * DEV_COST_PER_FEATURE * (saved_pct / 100));
+  setFermiValue('reuse-display', reused, classifyAssumption('lower-fixed', 'features_reused', reused));
+  setFermiValue('dev-display', saved_pct + '%', classifyAssumption('lower-fixed', 'dev_saved_pct', saved_pct));
+  document.getElementById('formula').innerHTML =
+    `<strong>${reused}</strong> features × $${DEV_COST_PER_FEATURE/1000}K dev cost × <strong>${saved_pct}%</strong> saved = <strong>${fmtMoney(saved)} engineering saved/yr</strong>`;
+  player.impact = saved;
+  player.assumptions = { features_reused: reused, dev_saved_pct: saved_pct };
+  document.getElementById('impact-number').textContent = fmtMoney(saved);
+  document.getElementById('impact-detail').textContent = `Annual engineering savings from reuse`;
+  updateCostCalc();
+}
+
+function updateCostCalc() {
+  const weeks = parseInt(document.getElementById('weeks-slider').value, 10) || 0;
+  player.weeks = weeks;
+  document.getElementById('weeks-display').textContent = weeks + (weeks === 1 ? ' week' : ' weeks');
+
+  let total = 0;
+  ['designers', 'engineers'].forEach(b => {
+    const el = document.getElementById('count-' + b);
+    const raw = el ? parseInt(el.value, 10) : 0;
+    const count = isNaN(raw) || raw < 0 ? 0 : raw;
+    player[b + '_count'] = count;
+    const rate = HEADCOUNT_RATES[b];
+    const cost = count * weeks * rate;
+    const mathEl = document.getElementById('math-' + b);
+    if (mathEl) mathEl.textContent = (count > 0 && weeks > 0)
+      ? `${count} × ${weeks} wk × $${rate/1000}K = $${cost.toLocaleString()}`
+      : '';
+    total += cost;
+  });
+  ['research', 'external', 'tooling'].forEach(b => {
+    const el = document.getElementById('cost-' + b);
+    const v = el ? parseInt(el.value, 10) : 0;
+    const safe = isNaN(v) || v < 0 ? 0 : v;
+    player[b] = safe;
+    total += safe;
+  });
+  document.getElementById('cost-total').textContent = '$' + total.toLocaleString();
+
+  // ROI display
+  const roiEl = document.getElementById('roi-display');
+  const detailEl = document.getElementById('roi-detail');
+  if (total <= 0 || !player.impact || player.impact <= 0) {
+    roiEl.textContent = '—';
+    detailEl.textContent = 'Allocate your budget to see your return';
+    return;
+  }
+  const roi = player.impact / total;
+  roiEl.textContent = roi >= 1 ? roi.toFixed(1) + '×' : Math.round(roi * 100) + '%';
+  const monthlyImpact = player.impact / 12;
+  const paybackMonths = monthlyImpact > 0 ? total / monthlyImpact : Infinity;
+  let paybackText;
+  if (paybackMonths < 1) paybackText = 'less than 1 month';
+  else if (paybackMonths < 12) paybackText = Math.round(paybackMonths) + ' months';
+  else paybackText = (paybackMonths / 12).toFixed(1) + ' years';
+  detailEl.textContent = 'Annual impact ÷ cost — payback in ' + paybackText;
+}
+
+/* ---------- Comparison reveal ---------- */
+function goCompare() {
+  const errEl = document.getElementById('estimation-error');
+  errEl.style.display = 'none';
+  // Validate: need some budget + some impact
+  const totalCost = (player.designers_count || 0) * (player.weeks || 0) * HEADCOUNT_RATES.designers
+    + (player.engineers_count || 0) * (player.weeks || 0) * HEADCOUNT_RATES.engineers
+    + (player.research || 0) + (player.external || 0) + (player.tooling || 0);
+  if (totalCost <= 0 || !player.impact || player.impact <= 0) {
+    errEl.textContent = totalCost <= 0
+      ? 'Allocate at least some budget before continuing.'
+      : 'Move at least one slider so your impact is above zero.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Build the comparison pool — player first, then bots.
+  comparePool = [playerPitch(), ...BOT_PITCHES.map(b => ({...b, name: b.name, is_you: false}))];
+  comparePool[0].is_you = true;
+  comparePickIndex = null;
+  renderCompareGrid();
+  showScreen('screen-compare');
+}
+
+function playerPitch() {
+  const designers_cost = (player.designers_count || 0) * (player.weeks || 0) * HEADCOUNT_RATES.designers;
+  const engineers_cost = (player.engineers_count || 0) * (player.weeks || 0) * HEADCOUNT_RATES.engineers;
+  const total_cost = designers_cost + engineers_cost + (player.research || 0) + (player.external || 0) + (player.tooling || 0);
+  return {
+    name: 'Your pitch', lever: player.lever, impact: player.impact, weeks: player.weeks,
+    cost_breakdown: {
+      designers: designers_cost, designers_count: player.designers_count || 0,
+      engineers: engineers_cost, engineers_count: player.engineers_count || 0,
+      research: player.research || 0, external: player.external || 0, tooling: player.tooling || 0,
+    },
+    total_cost: total_cost,
+    plan: player.plan, reasoning: player.reasoning, assumptions: player.assumptions,
+  };
+}
+
+function formatAssumptions(lever, a) {
+  if (!a) return '';
+  const tag = (key) => classificationTagHtml(classifyAssumption(lever, key, a[key]));
+  switch (lever) {
+    case 'more-customers':
+      if (a.recovered_pct === undefined && a.conv_pct === undefined) return '';
+      return `recover <strong>${a.recovered_pct ?? '?'}%</strong> of step-5 drop-offs${tag('recovered_pct')}, <strong>${a.conv_pct ?? '?'}%</strong> of those convert${tag('conv_pct')}`;
+    case 'higher-price':
+      if (a.new_acv === undefined && a.acceptance_pct === undefined) return '';
+      return `new contract value <strong>$${a.new_acv ?? '?'}/yr</strong>${tag('new_acv')}, <strong>${a.acceptance_pct ?? '?'}%</strong> of new customers accept${tag('acceptance_pct')}`;
+    case 'more-frequency':
+      if (a.churn_reduction_pct === undefined) return '';
+      return `cut annual churn by <strong>${a.churn_reduction_pct}%</strong>${tag('churn_reduction_pct')}`;
+    case 'lower-variable':
+      if (a.support_reduction_pct === undefined) return '';
+      return `cut support tickets by <strong>${a.support_reduction_pct}%</strong> per customer${tag('support_reduction_pct')}`;
+    case 'lower-fixed':
+      if (a.features_reused === undefined && a.dev_saved_pct === undefined) return '';
+      return `<strong>${a.features_reused ?? '?'}</strong> future features reuse the system${tag('features_reused')}, each saving <strong>${a.dev_saved_pct ?? '?'}%</strong> dev time${tag('dev_saved_pct')}`;
+    default: return '';
+  }
+}
+
+function renderCompareGrid() {
+  const grid = document.getElementById('compare-grid');
+  grid.innerHTML = comparePool.map((p, i) => {
+    const isYou = !!p.is_you;
+    const picked = comparePickIndex === i;
+    const cost = p.total_cost || 0;
+    const impact = p.impact || 0;
+    const monthly = impact > 0 ? impact / 12 : 0;
+    const paybackMonths = monthly > 0 ? cost / monthly : 0;
+    let pb = '—';
+    if (cost && impact) {
+      pb = paybackMonths < 1 ? '<1 mo' : (paybackMonths < 12 ? Math.round(paybackMonths) + ' mo' : (paybackMonths/12).toFixed(1) + ' yr');
+    }
+    const L = LEVERS[p.lever] || {};
+    const sh = CASE.stakeholders.find(s => s.lever === p.lever);
+    const backed = sh ? `<div class="cc-backed">Backed by ${esc(sh.role)}</div>` : '';
+    const assumptions = formatAssumptions(p.lever, p.assumptions);
+    const planBlock = p.plan
+      ? `<div class="cc-plan"><span class="cc-section-label">What they'd do</span>${esc(p.plan)}</div>`
+      : '';
+    const reasoningBlock = p.reasoning
+      ? `<div class="cc-reasoning"><span class="cc-section-label">How they got there</span>"${esc(p.reasoning)}"</div>`
+      : '';
+    const youTag = isYou ? '<span class="assumption-tag tone-typical" style="margin-left:8px;">your pitch</span>' : '';
+    const classes = ['compare-card'];
+    if (isYou) classes.push('yours');
+    if (picked) classes.push('picked');
+    return `
+      <div class="${classes.join(' ')}">
+        <div class="cc-header">
+          <div>
+            <div class="cc-name">${esc(p.name)}${youTag}</div>
+          </div>
+          <div class="cc-impact">${fmtMoney(impact)}/yr</div>
+        </div>
+        <div class="cc-numbers">
+          <div><span class="ccl">Cost</span>${fmtMoney(cost)}</div>
+          <div><span class="ccl">Time</span>${p.weeks}wk</div>
+          <div><span class="ccl">Payback</span>${pb}</div>
+        </div>
+        <div>
+          <div class="cc-lever">${esc(L.label || p.lever || '')}</div>
+          ${backed}
+        </div>
+        ${assumptions ? `<div class="cc-assumptions"><span class="cc-section-label">Their assumptions</span>${assumptions}</div>` : ''}
+        ${planBlock}
+        ${reasoningBlock}
+        <button class="cc-pick-btn" onclick="pickCompare(${i})">${picked ? '✓ Picked' : 'Pick this'}</button>
+      </div>`;
+  }).join('');
+  document.getElementById('compare-next-btn').disabled = comparePickIndex === null;
+}
+function pickCompare(i) {
+  comparePickIndex = comparePickIndex === i ? null : i;
+  renderCompareGrid();
+}
+
+/* ---------- Reflection ---------- */
+function goReflect() {
+  // Wire confidence slider
+  const cEl = document.getElementById('ref-confidence');
+  const cVal = document.getElementById('ref-confidence-value');
+  cEl.oninput = () => cVal.textContent = cEl.value;
+  cVal.textContent = cEl.value;
+  showScreen('screen-reflect');
+}
+
+function buildReflectionPayload() {
+  const picked = comparePickIndex !== null ? comparePool[comparePickIndex] : null;
+  const L = LEVERS[player.lever] || {};
+  const sh = CASE.stakeholders.find(s => s.lever === player.lever);
+
+  const pp = playerPitch();
+  const summaryLines = [
+    `Lever: ${L.label || player.lever}`,
+    `Backed by: ${sh ? sh.role : '(unknown)'}`,
+    `Plan: ${player.plan || '(none)'}`,
+    `Reasoning: ${player.reasoning || '(none)'}`,
+    `Claimed impact: ${fmtMoney(player.impact)}/yr`,
+    `Budget asked: ${fmtMoney(pp.total_cost)} over ${player.weeks} weeks`,
+    `Headcount: ${player.designers_count} designer(s) + ${player.engineers_count} engineer(s)`,
+    `Other costs: research $${player.research}, external $${player.external}, tooling $${player.tooling}`,
+    `Assumptions: ${formatAssumptions(player.lever, player.assumptions).replace(/<[^>]+>/g, '')}`,
+    ``,
+    `Picked from comparison: ${picked ? (picked.is_you ? "their own pitch ('Your pitch')" : picked.name) : '(skipped)'}`,
+  ];
+
+  return {
+    student_email: player.email,
+    game_name: GAME_NAME,
+    game_summary: summaryLines.join('\n'),
+    confidence: document.getElementById('ref-confidence').value + '/10',
+    takeaway: document.getElementById('ref-takeaway').value.trim(),
+    application: document.getElementById('ref-application').value.trim(),
+    surprise: document.getElementById('ref-surprise').value.trim(),
+    other: document.getElementById('ref-other').value.trim() || '(none)',
+    // Game-specific escape hatches in case anyone wants per-game templates later
+    scenario: 'StreamFlow',
+    diagnosis: L.label || player.lever,
+    levers: L.label || '',
+    reasoning: player.reasoning,
+  };
+}
+
+function submitReflection() {
+  const errEl = document.getElementById('ref-error');
+  const takeaway = document.getElementById('ref-takeaway').value.trim();
+  const application = document.getElementById('ref-application').value.trim();
+  const surprise = document.getElementById('ref-surprise').value.trim();
+  if (!takeaway || !application || !surprise) { errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+
+  const payload = buildReflectionPayload();
+  const btn = document.getElementById('ref-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+    Promise.all([
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_ADMIN_TEMPLATE, { ...payload, to_email: ADMIN_EMAIL }),
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_CONFIRM_TEMPLATE, { ...payload, to_email: player.email }),
+    ])
+      .then(() => showSuccess())
+      .catch(err => {
+        console.error('Email send failed:', err);
+        // d.MBA pattern: never block the player on transient mail failure.
+        console.log('Payload that would have been sent:', payload);
+        showSuccess();
+      });
+  } catch (err) {
+    console.error('EmailJS init failed:', err);
+    console.log('Payload that would have been sent:', payload);
+    showSuccess();
+  }
+}
+
+function showSuccess() {
+  document.getElementById('ref-confirm-email').textContent = player.email;
+  showScreen('screen-success');
+}
+
+function playAgain() {
+  // Keep the email so they don't have to re-enter; reset everything else.
+  const keepEmail = player.email;
+  player = {
+    email: keepEmail, lever: null, impact: 0, weeks: 6,
+    designers_count: 0, engineers_count: 0,
+    research: 0, external: 0, tooling: 0,
+    plan: '', reasoning: '', assumptions: {},
+  };
+  comparePool = [];
+  comparePickIndex = null;
+  renderBriefing();
+  showScreen('screen-briefing');
+}
+</script>
+</body>
+</html>
