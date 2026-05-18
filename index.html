@@ -441,6 +441,56 @@ input[type="range"] { width: 100%; accent-color: var(--blue); margin: 4px 0; }
   display: block; font-size: 0.6rem; color: var(--text-muted);
   text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;
 }
+.cc-lever-box {
+  padding: 12px 14px; background: #fafaf6; border-radius: 6px;
+}
+.cc-lever-name { font-size: 1rem; font-weight: 700; }
+.cc-lever-case {
+  font-size: 0.82rem; line-height: 1.55;
+  margin-top: 6px; color: var(--text);
+}
+.cc-backed-quote {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: #eef2ff;
+  border-left: 3px solid #6366f1;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-style: italic;
+  line-height: 1.55;
+}
+.cc-backed-quote .backed-by {
+  font-style: normal;
+  font-weight: 700;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #3730a3;
+  display: block;
+  margin-bottom: 4px;
+}
+.cc-cost-table {
+  width: 100%; border-collapse: collapse; font-size: 0.82rem;
+}
+.cc-cost-table td {
+  padding: 5px 6px; border-bottom: 1px solid var(--border-light);
+}
+.cc-cost-table td.right { text-align: right; font-family: var(--mono); }
+.cc-cost-table tr:last-child td {
+  border-bottom: none; font-weight: 700; padding-top: 8px;
+}
+.cc-cliff-reminder {
+  padding: 10px 12px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: #7f1d1d;
+  line-height: 1.5;
+}
+.cc-cliff-reminder strong { color: #991b1b; }
+/* Kept for back-compat — older compact lever line. */
 .cc-lever { font-size: 0.88rem; font-weight: 600; }
 .cc-backed { font-size: 0.74rem; color: var(--text-muted); font-style: italic; margin-top: 2px; }
 .cc-assumptions {
@@ -1613,7 +1663,6 @@ function renderCompareGrid() {
     }
     const L = LEVERS[p.lever] || {};
     const sh = CASE.stakeholders.find(s => s.lever === p.lever);
-    const backed = sh ? `<div class="cc-backed">Backed by ${esc(sh.role)}</div>` : '';
     const assumptions = formatAssumptions(p.lever, p.assumptions);
     const planBlock = p.plan
       ? `<div class="cc-plan"><span class="cc-section-label">What they'd do</span>${esc(p.plan)}</div>`
@@ -1621,6 +1670,48 @@ function renderCompareGrid() {
     const reasoningBlock = p.reasoning
       ? `<div class="cc-reasoning"><span class="cc-section-label">How they got there</span>"${esc(p.reasoning)}"</div>`
       : '';
+
+    // Lever box — name + case_explanation + full stakeholder quote (was previously
+    // just "Backed by Sales"; now matches the multiplayer focus card).
+    const backedQuote = sh
+      ? `<div class="cc-backed-quote"><span class="backed-by">Backed by ${esc(sh.role)} — wants ${esc(sh.want)}</span>"${esc(sh.quote)}"</div>`
+      : '';
+    const leverBox = `
+      <div class="cc-lever-box">
+        <div class="cc-lever-name">${esc(L.label || p.lever || '')}</div>
+        ${L.case_explanation ? `<p class="cc-lever-case">${esc(L.case_explanation)}</p>` : ''}
+        ${backedQuote}
+      </div>`;
+
+    // Cost breakdown table — designers, engineers, research, external, tooling, total.
+    // Same shape as multiplayer's voting focus card.
+    const cb = p.cost_breakdown || {};
+    const costRows = [];
+    if (cb.designers_count) costRows.push({
+      label: `${cb.designers_count} designer${cb.designers_count === 1 ? '' : 's'} × ${p.weeks}wk × $${HEADCOUNT_RATES.designers/1000}K/wk`,
+      amount: cb.designers,
+    });
+    if (cb.engineers_count) costRows.push({
+      label: `${cb.engineers_count} engineer${cb.engineers_count === 1 ? '' : 's'} × ${p.weeks}wk × $${HEADCOUNT_RATES.engineers/1000}K/wk`,
+      amount: cb.engineers,
+    });
+    if (cb.research) costRows.push({ label: 'User research', amount: cb.research });
+    if (cb.external) costRows.push({ label: 'External help', amount: cb.external });
+    if (cb.tooling)  costRows.push({ label: 'Tooling & software', amount: cb.tooling });
+    const costTable = `
+      <div>
+        <span class="cc-section-label">Cost breakdown</span>
+        <table class="cc-cost-table">
+          ${costRows.map(r => `<tr><td>${esc(r.label)}</td><td class="right">${fmtMoney(r.amount)}</td></tr>`).join('')}
+          <tr><td>Total</td><td class="right">${fmtMoney(p.total_cost)}</td></tr>
+        </table>
+      </div>`;
+
+    const cliffReminder = `
+      <div class="cc-cliff-reminder">
+        <strong>Reminder of the case:</strong> 62% of trials bail at step 5 — the brand-asset connection (API token, folder picker, permissions warning). Would this pitch actually fix that?
+      </div>`;
+
     const youTag = isYou ? '<span class="assumption-tag tone-typical" style="margin-left:8px;">your pitch</span>' : '';
     const classes = ['compare-card'];
     if (isYou) classes.push('yours');
@@ -1638,13 +1729,15 @@ function renderCompareGrid() {
           <div><span class="ccl">Time</span>${p.weeks}wk</div>
           <div><span class="ccl">Payback</span>${pb}</div>
         </div>
-        <div>
-          <div class="cc-lever">${esc(L.label || p.lever || '')}</div>
-          ${backed}
-        </div>
-        ${assumptions ? `<div class="cc-assumptions"><span class="cc-section-label">Their assumptions</span>${assumptions}</div>` : ''}
         ${planBlock}
+        <div>
+          <span class="cc-section-label">Which lever they're moving</span>
+          ${leverBox}
+        </div>
+        ${assumptions ? `<div><span class="cc-section-label">Their assumptions</span><div class="cc-assumptions">${assumptions}</div></div>` : ''}
         ${reasoningBlock}
+        ${costTable}
+        ${cliffReminder}
         <button class="cc-pick-btn" onclick="pickCompare(${i})">${picked ? '✓ Picked' : 'Pick this'}</button>
       </div>`;
   }).join('');
